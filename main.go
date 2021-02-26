@@ -18,14 +18,15 @@ type UserLogin struct {
 }
 
 func validateUserCredentials(userlogin *UserLogin) bool {
+	// If we wanted we could check separately and return a
+	// more determinate response so the end user knew if an
+	// email existed or not
 	return userlogin.Email == "c137@onecause.com" && userlogin.Password == "#th@nH@rm#y#r!$100%D0p#"
 }
 
-func validateUserCode(userlogin *UserLogin) bool {
-	// store current time so it doesn't change between references
-	currentTime := time.Now().UTC()
-	hourString := fmt.Sprint(currentTime.Hour())
-	minuteString := fmt.Sprint(currentTime.Minute())
+func validateUserCode(userlogin *UserLogin, currentUTCTime time.Time) bool {
+	hourString := fmt.Sprint(currentUTCTime.Hour())
+	minuteString := fmt.Sprint(currentUTCTime.Minute())
 	concatenatedTime := hourString + minuteString
 	timeCode, err := strconv.Atoi(concatenatedTime)
 
@@ -41,7 +42,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewDecoder(r.Body).Decode(&userLogin)
 
 	credentialResult := validateUserCredentials(&userLogin)
-	userCodeResult := validateUserCode(&userLogin)
+	currentUTCTime := time.Now().UTC()
+	userCodeResult := validateUserCode(&userLogin, currentUTCTime)
 
 	if credentialResult && userCodeResult {
 		// log successful login attempt by user email and send response
